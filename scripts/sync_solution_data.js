@@ -6,6 +6,7 @@ export const LANGUAGE_FILES = {
     java: 'java',
     python: 'py',
     cpp: 'cpp',
+    sql: 'sql',
 };
 
 const SOURCE_REPOSITORY = 'https://github.com/walkccc/LeetCode';
@@ -22,7 +23,9 @@ export const collectSolutions = (repositoryDir, revision) => {
     }
 
     const solutions = {};
-    const languageCounts = { java: 0, python: 0, cpp: 0 };
+    const languageCounts = Object.fromEntries(
+        Object.keys(LANGUAGE_FILES).map(language => [language, 0])
+    );
 
     fs.readdirSync(solutionsDir, { withFileTypes: true })
         .filter(entry => entry.isDirectory())
@@ -94,6 +97,6 @@ if (isCli) {
     console.log(
         `Created ${outputFile} with ${catalog.problemCount} problems ` +
         `(${catalog.languageCounts.java} Java, ${catalog.languageCounts.python} Python, ` +
-        `${catalog.languageCounts.cpp} C++ solutions).`
+        `${catalog.languageCounts.cpp} C++, ${catalog.languageCounts.sql} SQL solutions).`
     );
 }

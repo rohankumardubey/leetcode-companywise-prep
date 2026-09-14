@@ -5,6 +5,7 @@ const LANGUAGES = [
     { id: 'java', label: 'Java' },
     { id: 'python', label: 'Python' },
     { id: 'cpp', label: 'C++' },
+    { id: 'sql', label: 'SQL' },
 ];
 
 export default function SolutionModal({ problem, solution, onClose }) {

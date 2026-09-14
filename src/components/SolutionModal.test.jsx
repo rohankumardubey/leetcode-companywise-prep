@@ -7,6 +7,7 @@ const solution = {
     languages: {
         java: { code: 'class Solution {}', sourceUrl: 'https://example.com/1.java' },
         python: { code: 'class Solution:\n    pass', sourceUrl: 'https://example.com/1.py' },
+        sql: { code: 'SELECT * FROM Person;', sourceUrl: 'https://example.com/1.sql' },
     },
 };
 
@@ -26,6 +27,10 @@ describe('SolutionModal', () => {
         expect(screen.getByText(/class Solution:/)).toBeInTheDocument();
         expect(screen.queryByRole('tab', { name: 'C++' })).not.toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'View source' })).toHaveAttribute('href', 'https://example.com/1.py');
+
+        fireEvent.click(screen.getByRole('tab', { name: 'SQL' }));
+        expect(screen.getByText('SELECT * FROM Person;')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'View source' })).toHaveAttribute('href', 'https://example.com/1.sql');
     });
 
     it('copies the active solution and closes with Escape', async () => {

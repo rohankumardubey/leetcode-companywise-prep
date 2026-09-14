@@ -13,7 +13,7 @@ Stop randomly solving problems. This tool generates a **tailored interview prepa
 *   **Dynamic Difficulty**: Adjusts problem mix based on your experience (Beginner vs. Expert).
 *   **Progress Tracking**: Mark problems as "Done" and watch your completion percentage rise.
 *   **Current Company Data**: Refreshes company-wise questions from the configured GitHub source.
-*   **Local Solution Viewer**: Opens Java, Python, and C++ solutions sourced from [`walkccc/LeetCode`](https://github.com/walkccc/LeetCode).
+*   **Local Solution Viewer**: Opens Java, Python, C++, and SQL solutions sourced from [`walkccc/LeetCode`](https://github.com/walkccc/LeetCode).
 
 ## 🚀 How to Use
 
@@ -40,7 +40,7 @@ The easiest way to prepare the local data and open the development server is:
 
 On the first run, the script installs dependencies and downloads the complete question catalog
 from [`snehasishroy/leetcode-companywise-interview-questions`](https://github.com/snehasishroy/leetcode-companywise-interview-questions)
-and Java, Python, and C++ solutions from the MIT-licensed
+and Java, Python, C++, and SQL solutions from the MIT-licensed
 [`walkccc/LeetCode`](https://github.com/walkccc/LeetCode). Both upstream
 repositories and all generated catalogs stay in the ignored `.cache/`
 directory. Every later run checks GitHub for updates and regenerates a catalog

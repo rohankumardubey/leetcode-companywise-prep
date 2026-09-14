@@ -38,7 +38,7 @@ describe('solution importer', () => {
         expect(catalog).toMatchObject({
             available: true,
             problemCount: 1,
-            languageCounts: { java: 1, python: 1, cpp: 0 },
+            languageCounts: { java: 1, python: 1, cpp: 0, sql: 0 },
             source: { name: 'walkccc/LeetCode', license: 'MIT', revision: 'abc123' },
         });
         expect(catalog.solutions['1'].languages).toEqual({
@@ -52,5 +52,20 @@ describe('solution importer', () => {
             },
         });
         expect(catalog.solutions['2']).toBeUndefined();
+    });
+
+    it('imports SQL solutions by exact problem ID', () => {
+        const repositoryDir = createRepository();
+        const problemDir = path.join(repositoryDir, 'solutions', '175. Combine Two Tables');
+        fs.mkdirSync(problemDir);
+        fs.writeFileSync(path.join(problemDir, '175.sql'), 'SELECT firstName FROM Person;');
+
+        const catalog = collectSolutions(repositoryDir, 'def456');
+
+        expect(catalog.solutions['175'].languages.sql).toEqual({
+            code: 'SELECT firstName FROM Person;',
+            sourceUrl: expect.stringContaining('/175.%20Combine%20Two%20Tables/175.sql'),
+        });
+        expect(catalog.languageCounts.sql).toBe(1);
     });
 });
