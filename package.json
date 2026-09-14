@@ -1,0 +1,44 @@
+{
+  "name": "leetcode-companywise-prep",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://rohankumardubey.github.io/leetcode-companywise-prep",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sync-data": "node scripts/sync_company_data.js .cache/leetcode-companywise-interview-questions .cache/companyProblems.json",
+    "test": "vitest",
+    "lint": "eslint .",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "he": "^1.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "csv-parse": "^5.5.5",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "gh-pages": "^6.1.1",
+    "globals": "^16.5.0",
+    "jsdom": "^27.4.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "vite": "^5.2.0",
+    "vitest": "^4.0.16"
+  }
+}

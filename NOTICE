@@ -1,0 +1,13 @@
+Smart Interview Grind
+Copyright 2026 Rohan Dubey
+
+This product includes modified software originally distributed from:
+https://github.com/nikoo28/smart-interview-grind
+under the Apache License, Version 2.0.
+
+Company-wise question metadata is downloaded at setup time from:
+https://github.com/snehasishroy/leetcode-companywise-interview-questions
+
+The question-data repository does not currently declare a license and states
+that its CSV files were generated from LeetCode Premium. That data remains in
+the user's local ignored cache and is not included in this source repository.
