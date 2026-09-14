@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
 import { getCompaniesForWindow } from '../utils/problemFilters';
+import SolutionModal from './SolutionModal';
 
-export default function ScheduleView({ schedule, completed, setCompleted, questionWindow = 'all' }) {
+export default function ScheduleView({ schedule, completed, setCompleted, questionWindow = 'all', solutions = {} }) {
     const [celebratedWeeks, setCelebratedWeeks] = useState(new Set());
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const [hasCelebratedCompletion, setHasCelebratedCompletion] = useState(false);
+    const [solutionProblem, setSolutionProblem] = useState(null);
 
     // Confetti Effect for Week Completion
     useEffect(() => {
@@ -230,6 +232,16 @@ export default function ScheduleView({ schedule, completed, setCompleted, questi
                                             </span>
 
                                             {p.topic && <span className="text-gray-400 dark:text-gray-500 font-medium">• {p.topic}</span>}
+
+                                            {solutions[p.id] && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSolutionProblem(p)}
+                                                    className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40"
+                                                >
+                                                    Solutions
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -338,6 +350,14 @@ export default function ScheduleView({ schedule, completed, setCompleted, questi
                     </div>
                 </div>,
                 document.body
+            )}
+
+            {solutionProblem && (
+                <SolutionModal
+                    problem={solutionProblem}
+                    solution={solutions[solutionProblem.id]}
+                    onClose={() => setSolutionProblem(null)}
+                />
             )}
         </div>
     );

@@ -21,6 +21,9 @@ fi
 COMPANY_DATA_DIR="$ROOT_DIR/.cache/leetcode-companywise-interview-questions"
 COMPANY_DATA_REVISION_FILE="$ROOT_DIR/.cache/company-data-revision"
 GENERATED_DATA_FILE="$ROOT_DIR/.cache/companyProblems.json"
+SOLUTION_SOURCE_DIR="$ROOT_DIR/.cache/walkccc-leetcode"
+SOLUTION_DATA_REVISION_FILE="$ROOT_DIR/.cache/solution-data-revision"
+GENERATED_SOLUTION_FILE="$ROOT_DIR/.cache/solutions.json"
 
 rm -f "$ROOT_DIR/.cache/localProblems.json"
 
@@ -60,9 +63,51 @@ else
     echo "Company question catalog is already current; skipping."
 fi
 
+if [[ ! -d "$SOLUTION_SOURCE_DIR/.git" ]]; then
+    echo "Downloading walkccc solution data..."
+    if ! git clone --depth 1 \
+        https://github.com/walkccc/LeetCode.git \
+        "$SOLUTION_SOURCE_DIR"; then
+        echo "Warning: Could not reach GitHub and no source checkout is cached."
+        if [[ -f "$GENERATED_SOLUTION_FILE" ]]; then
+            echo "Using the previously generated solution catalog."
+        else
+            echo "Solutions will be unavailable for this run."
+        fi
+    fi
+else
+    echo "Checking for walkccc solution updates..."
+    if ! git -C "$SOLUTION_SOURCE_DIR" pull --ff-only --quiet; then
+        echo "Warning: Could not reach GitHub; using the cached walkccc solutions."
+    fi
+fi
+
+if [[ -d "$SOLUTION_SOURCE_DIR/.git" ]]; then
+    SOLUTION_SOURCE_REVISION="$(git -C "$SOLUTION_SOURCE_DIR" rev-parse HEAD)"
+    SOLUTION_IMPORTER_REVISION="$(node -p \
+        "require('crypto').createHash('sha256').update(require('fs').readFileSync('scripts/sync_solution_data.js')).digest('hex')")"
+    SOLUTION_CATALOG_REVISION="$SOLUTION_SOURCE_REVISION:$SOLUTION_IMPORTER_REVISION"
+    GENERATED_SOLUTION_CATALOG_REVISION=""
+    if [[ -f "$SOLUTION_DATA_REVISION_FILE" ]]; then
+        GENERATED_SOLUTION_CATALOG_REVISION="$(cat "$SOLUTION_DATA_REVISION_FILE")"
+    fi
+
+    if [[ ! -f "$GENERATED_SOLUTION_FILE" ]] ||
+       [[ "$SOLUTION_CATALOG_REVISION" != "$GENERATED_SOLUTION_CATALOG_REVISION" ]]; then
+        echo "Building the local solution catalog..."
+        node scripts/sync_solution_data.js \
+            "$SOLUTION_SOURCE_DIR" \
+            "$GENERATED_SOLUTION_FILE" \
+            "$SOLUTION_SOURCE_REVISION"
+        printf '%s\n' "$SOLUTION_CATALOG_REVISION" > "$SOLUTION_DATA_REVISION_FILE"
+    else
+        echo "Solution catalog is already current; skipping."
+    fi
+fi
+
 echo
 if [[ "${SETUP_ONLY:-0}" == "1" ]]; then
-    echo "Company question catalog is ready."
+    echo "Local question and solution catalogs are ready."
     exit 0
 fi
 

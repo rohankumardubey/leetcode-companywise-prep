@@ -8,17 +8,33 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     {
-      name: 'local-problems-data',
+      name: 'local-catalog-data',
       resolveId(id) {
-        return id === 'virtual:problems-data' ? '\0virtual:problems-data' : null
+        if (id === 'virtual:problems-data' || id === 'virtual:solutions-data') {
+          return `\0${id}`
+        }
+        return null
       },
       load(id) {
-        if (id !== '\0virtual:problems-data') return null
+        const catalogs = {
+          '\0virtual:problems-data': {
+            file: '.cache/companyProblems.json',
+            fallback: '[]',
+            warning: 'Company question data is missing. Run ./run.sh before starting Vite.',
+          },
+          '\0virtual:solutions-data': {
+            file: '.cache/solutions.json',
+            fallback: JSON.stringify({ available: false, solutions: {} }),
+            warning: 'Solution data is missing. Run ./run.sh to enable local solution viewing.',
+          },
+        }
+        const catalog = catalogs[id]
+        if (!catalog) return null
 
-        const dataFile = path.resolve('.cache/companyProblems.json')
+        const dataFile = path.resolve(catalog.file)
         if (!fs.existsSync(dataFile)) {
-          console.warn('Company question data is missing. Run ./run.sh before starting Vite.')
-          return 'export default []'
+          console.warn(catalog.warning)
+          return `export default ${catalog.fallback}`
         }
         this.addWatchFile(dataFile)
 

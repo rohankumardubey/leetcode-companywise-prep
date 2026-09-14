@@ -82,4 +82,26 @@ describe('ScheduleView Component', () => {
 
         expect(setCompletedMock).toHaveBeenCalled();
     });
+
+    it('shows the Solutions action only for mapped problem IDs', () => {
+        const solutions = {
+            '1': {
+                languages: {
+                    java: { code: 'class Solution {}', sourceUrl: 'https://example.com/1.java' },
+                },
+            },
+        };
+        render(
+            <ScheduleView
+                schedule={mockSchedule}
+                completed={new Set()}
+                setCompleted={() => {}}
+                solutions={solutions}
+            />
+        );
+
+        expect(screen.getAllByRole('button', { name: 'Solutions' })).toHaveLength(1);
+        fireEvent.click(screen.getByRole('button', { name: 'Solutions' }));
+        expect(screen.getByRole('dialog', { name: '1. Two Sum' })).toBeInTheDocument();
+    });
 });

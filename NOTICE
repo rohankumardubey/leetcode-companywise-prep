@@ -11,3 +11,10 @@ https://github.com/snehasishroy/leetcode-companywise-interview-questions
 The question-data repository does not currently declare a license and states
 that its CSV files were generated from LeetCode Premium. That data remains in
 the user's local ignored cache and is not included in this source repository.
+
+Java, Python, and C++ solution source is downloaded at setup time from:
+https://github.com/walkccc/LeetCode
+
+walkccc/LeetCode is Copyright (c) 2022 Peng-Yu Chen and is distributed under
+the MIT License. Its source and generated local catalog remain in the user's
+ignored cache and are not included in this repository.

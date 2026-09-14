@@ -13,6 +13,7 @@ Stop randomly solving problems. This tool generates a **tailored interview prepa
 *   **Dynamic Difficulty**: Adjusts problem mix based on your experience (Beginner vs. Expert).
 *   **Progress Tracking**: Mark problems as "Done" and watch your completion percentage rise.
 *   **Current Company Data**: Refreshes company-wise questions from the configured GitHub source.
+*   **Local Solution Viewer**: Opens Java, Python, and C++ solutions sourced from [`walkccc/LeetCode`](https://github.com/walkccc/LeetCode).
 
 ## 🚀 How to Use
 
@@ -39,10 +40,14 @@ The easiest way to prepare the local data and open the development server is:
 
 On the first run, the script installs dependencies and downloads the complete question catalog
 from [`snehasishroy/leetcode-companywise-interview-questions`](https://github.com/snehasishroy/leetcode-companywise-interview-questions)
-into the ignored `.cache/` directory, builds the app's question catalog, and
-opens the app. Every later run checks GitHub for updates and regenerates the
-catalog only when the source commit changes. If GitHub is temporarily
-unavailable, an existing cached copy is used.
+and Java, Python, and C++ solutions from the MIT-licensed
+[`walkccc/LeetCode`](https://github.com/walkccc/LeetCode). Both upstream
+repositories and all generated catalogs stay in the ignored `.cache/`
+directory. Every later run checks GitHub for updates and regenerates a catalog
+only when its source commit or importer changes. If GitHub is temporarily
+unavailable, an existing cached checkout/catalog is used. A clean source build
+still succeeds without `.cache`; company questions show an unavailable screen,
+and solution actions remain hidden.
 
 To run each step manually:
 
@@ -56,6 +61,10 @@ git clone --depth 1 \
 
 # Build the app catalog from every company's all.csv
 npm run sync-data
+
+# Clone walkccc solutions and build the local solution catalog
+git clone --depth 1 https://github.com/walkccc/LeetCode.git .cache/walkccc-leetcode
+npm run sync-solutions
 
 # Start Dev Server
 npm run dev
@@ -71,6 +80,9 @@ npm run deploy
 The question source repository does not declare a software/data license and
 states that its CSV files were generated from LeetCode Premium. Its data is
 downloaded only into your local ignored cache and is not redistributed here.
+Solution source and generated solution content also remain in the local cache
+and are not committed. The solution viewer links every displayed file back to
+its exact upstream revision.
 
 ## Attribution
 

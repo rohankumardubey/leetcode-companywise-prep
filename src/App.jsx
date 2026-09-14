@@ -10,6 +10,7 @@ import { generateSchedule } from './utils/scheduler';
 import { normalizeConfigForProblems } from './utils/config';
 import { getCompaniesForWindow, matchesCompanyAndWindow } from './utils/problemFilters';
 import problemsData from 'virtual:problems-data';
+import solutionsData from 'virtual:solutions-data';
 
 function App() {
     // UI State
@@ -306,6 +307,7 @@ function App() {
                                 completed={completed}
                                 setCompleted={setCompleted}
                                 questionWindow={config.questionWindow}
+                                solutions={solutionsData.solutions}
                             />
                         </div>
                     </div>
