@@ -219,6 +219,18 @@ export default function ScheduleView({ schedule, completed, setCompleted, questi
                                         </div>
 
                                         <div className="flex flex-wrap gap-3 text-xs items-center">
+                                            <span className="rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 font-mono font-semibold text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                                                #{p.id}
+                                            </span>
+
+                                            <span className={`rounded-md border px-2 py-0.5 font-semibold ${
+                                                p.track === 'sql'
+                                                    ? 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-300'
+                                                    : 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300'
+                                            }`}>
+                                                {p.track === 'sql' ? 'SQL Track' : 'Algorithms'}
+                                            </span>
+
                                             <span className={`px-2.5 py-0.5 rounded-md font-medium border ${p.difficulty === 'Very Easy' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' :
                                                 p.difficulty === 'Easy' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-100 dark:border-green-800' :
                                                     p.difficulty === 'Medium' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-100 dark:border-yellow-800' :
@@ -231,7 +243,20 @@ export default function ScheduleView({ schedule, completed, setCompleted, questi
                                                 {p.duration}m
                                             </span>
 
-                                            {p.topic && <span className="text-gray-400 dark:text-gray-500 font-medium">• {p.topic}</span>}
+                                            {(p.relatedTopics || []).slice(0, 3).map(topic => {
+                                                const name = topic.name || topic;
+                                                return (
+                                                    <span key={name} className="rounded-md bg-gray-100 px-2 py-0.5 font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                                        {name}
+                                                    </span>
+                                                );
+                                            })}
+
+                                            {(p.solutionLanguages || []).map(language => (
+                                                <span key={language} className="font-mono font-semibold uppercase text-gray-400 dark:text-gray-500">
+                                                    {language === 'cpp' ? 'C++' : language}
+                                                </span>
+                                            ))}
 
                                             {solutions[p.id] && (
                                                 <button
@@ -247,23 +272,19 @@ export default function ScheduleView({ schedule, completed, setCompleted, questi
 
                                     {/* 3. Meta Column (Video + Stats) */}
                                     <div className="flex items-center gap-4">
-                                        {/* Video Thumbnail (Left of Stats) */}
+                                        {/* Video explanation */}
                                         {p.videoUrl && (
                                             <a
                                                 href={p.videoUrl}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="group/video relative block w-28 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700 shadow-sm hover:ring-2 ring-blue-500 transition-all"
-                                                title={`Watch Solution: ${p.title}`}
+                                                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition-all hover:bg-red-100 hover:ring-2 hover:ring-red-400 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/50"
+                                                title={`Watch ${p.videoChannel || 'YouTube'} explanation: ${p.title}`}
+                                                aria-label={`Watch video explanation for ${p.title}`}
                                             >
-                                                {p.videoThumbnail && (
-                                                    <img src={p.videoThumbnail} alt="Solution" className="w-full h-full object-cover opacity-90 group-hover/video:opacity-100 transition-opacity" />
-                                                )}
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/video:bg-transparent transition-colors">
-                                                    <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm group-hover/video:scale-110 transition-transform">
-                                                        <svg className="w-4 h-4 text-white fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                                    </div>
-                                                </div>
+                                                <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 00.5 6.2 31 31 0 000 12a31 31 0 00.5 5.8 3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1A31 31 0 0024 12a31 31 0 00-.5-5.8zM9.6 15.6V8.4L15.8 12l-6.2 3.6z" />
+                                                </svg>
                                             </a>
                                         )}
 

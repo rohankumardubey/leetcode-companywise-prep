@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => ({
     {
       name: 'local-catalog-data',
       resolveId(id) {
-        if (id === 'virtual:problems-data' || id === 'virtual:solutions-data') {
+        if (id === 'virtual:problems-data' || id === 'virtual:solutions-data' || id === 'virtual:videos-data') {
           return `\0${id}`
         }
         return null
@@ -26,6 +26,11 @@ export default defineConfig(({ command }) => ({
             file: '.cache/solutions.json',
             fallback: JSON.stringify({ available: false, solutions: {} }),
             warning: 'Solution data is missing. Run ./run.sh to enable local solution viewing.',
+          },
+          '\0virtual:videos-data': {
+            file: '.cache/videos.json',
+            fallback: JSON.stringify({ available: false, videos: {} }),
+            warning: 'Video data is missing. Run ./run.sh to enable explanation links.',
           },
         }
         const catalog = catalogs[id]

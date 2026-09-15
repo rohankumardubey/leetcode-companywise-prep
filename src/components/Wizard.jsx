@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import QuestionWindowSelector from './QuestionWindowSelector';
+import ProblemTrackSelector from './ProblemTrackSelector';
 import { getCompaniesForWindow } from '../utils/problemFilters';
+import { matchesProblemTrack } from '../utils/problemTracks';
 
 const PRESETS = {
     topTech: ['Google', 'Meta', 'Amazon', 'Microsoft', 'Apple', 'Netflix', 'Uber', 'Airbnb'],
@@ -103,16 +105,20 @@ export default function Wizard({ config: globalConfig, setConfig: setGlobalConfi
     const companyOptions = useMemo(() => {
         if (!allProblems) return [];
         const set = new Set();
-        allProblems.forEach(p => getCompaniesForWindow(p, config.questionWindow).forEach(c => set.add(c)));
+        allProblems
+            .filter(problem => matchesProblemTrack(problem, config.track))
+            .forEach(p => getCompaniesForWindow(p, config.questionWindow).forEach(c => set.add(c)));
         return Array.from(set).sort();
-    }, [allProblems, config.questionWindow]);
+    }, [allProblems, config.questionWindow, config.track]);
 
     const topicOptions = useMemo(() => {
         if (!allProblems) return [];
         const set = new Set();
-        allProblems.forEach(p => (p.relatedTopics || []).forEach(t => set.add(t.name || t)));
+        allProblems
+            .filter(problem => matchesProblemTrack(problem, config.track))
+            .forEach(p => (p.relatedTopics || []).forEach(t => set.add(t.name || t)));
         return Array.from(set).sort();
-    }, [allProblems]);
+    }, [allProblems, config.track]);
 
     // Filter Helper: Sort selected items to top
     const getSortedResults = (allItems, selectedItems, query) => {
@@ -131,6 +137,8 @@ export default function Wizard({ config: globalConfig, setConfig: setGlobalConfi
     const filteredTopics = getSortedResults(topicOptions, config.selectedTopics, topicSearch);
     const hasCompanyData = companyOptions.length > 0;
     const hasTopicData = topicOptions.length > 0;
+    const sqlProblems = allProblems.filter(problem => matchesProblemTrack(problem, 'sql'));
+    const companyTaggedSqlProblems = sqlProblems.filter(problem => (problem.companies || []).length > 0);
 
     // Navigation Helpers
     const handleNext = () => {
@@ -200,16 +208,31 @@ export default function Wizard({ config: globalConfig, setConfig: setGlobalConfi
                     </div>
 
                     <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-12 text-center tracking-tight">
-                        {step === 1 && "What's your experience level?"}
+                        {step === 1 && "What do you want to practice?"}
                         {step === 2 && "Which companies are you targeting?"}
                         {step === 3 && "Any specific topics to focus on?"}
-                        {step === 4 && "What complexity level suits you?"}
+                        {step === 4 && (config.track === 'sql' ? "Your SQL track is ready." : "What complexity level suits you?")}
                     </h2>
 
                     {/* STEP 1: BASICS */}
                     {step === 1 && (
                         <div className="space-y-12 animate-fade-in-up">
+                            <ProblemTrackSelector
+                                large
+                                value={config.track}
+                                problems={allProblems}
+                                onChange={track => setConfig({
+                                    ...config,
+                                    track,
+                                    selectedCompanies: [],
+                                    selectedTopics: [],
+                                })}
+                            />
+
                             {/* Experience Level Cards */}
+                            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white">
+                                Choose your experience level
+                            </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {[
                                     { level: 'Beginner', icon: '🌱', desc: 'I need to focus on the fundamentals first.' },
@@ -552,7 +575,17 @@ export default function Wizard({ config: globalConfig, setConfig: setGlobalConfi
                     {step === 4 && (
                         <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 space-y-8 animate-fade-in-up">
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {config.track === 'sql' ? (
+                                <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6 dark:border-violet-800 dark:bg-violet-900/20">
+                                    <div className="text-3xl mb-3">🗄️</div>
+                                    <div className="text-xl font-bold text-gray-900 dark:text-white">{sqlProblems.length} SQL questions</div>
+                                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                        Your schedule will use the dedicated database track. {companyTaggedSqlProblems.length} questions include company-frequency metadata; all {sqlProblems.length} include an SQL solution.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button
                                     onClick={() => togglePreset('difficulty', 'standard')}
                                     className={`p-6 rounded-2xl border-2 text-left transition-all ${isStandardDifficulty
@@ -578,35 +611,37 @@ export default function Wizard({ config: globalConfig, setConfig: setGlobalConfi
                                 </button>
                             </div>
 
-                            {/* Custom Difficulty Selection */}
-                            {showCustomDifficulty && (
-                                <div className="border-t border-gray-100 dark:border-gray-700 pt-6 animate-fade-in">
-                                    <div className="space-y-3">
-                                        {[
-                                            { id: 'Very Easy', desc: 'Introduction to concepts.' },
-                                            { id: 'Easy', desc: 'Good for warmups and confidence.' },
-                                            { id: 'Medium', desc: 'The core of most interviews.' },
-                                            { id: 'Hard', desc: 'Challenging edge cases.' },
-                                            { id: 'Very Hard', desc: 'Deep algorithmic complexity.' }
-                                        ].map(d => (
-                                            <label key={d.id} className="flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={config.selectedDifficulties.includes(d.id)}
-                                                    onChange={() => toggleDifficulty(d.id)}
-                                                    className="w-5 h-5 text-blue-600 rounded bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 focus:ring-blue-500"
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-gray-900 dark:text-white">{d.id}</div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">{d.desc}</div>
-                                                </div>
-                                            </label>
-                                        ))}
-                                    </div>
-                                    <div className="text-right text-xs text-gray-400 mt-4">
-                                        {config.selectedDifficulties.length} levels selected
-                                    </div>
-                                </div>
+                                    {/* Custom Difficulty Selection */}
+                                    {showCustomDifficulty && (
+                                        <div className="border-t border-gray-100 dark:border-gray-700 pt-6 animate-fade-in">
+                                            <div className="space-y-3">
+                                                {[
+                                                    { id: 'Very Easy', desc: 'Introduction to concepts.' },
+                                                    { id: 'Easy', desc: 'Good for warmups and confidence.' },
+                                                    { id: 'Medium', desc: 'The core of most interviews.' },
+                                                    { id: 'Hard', desc: 'Challenging edge cases.' },
+                                                    { id: 'Very Hard', desc: 'Deep algorithmic complexity.' }
+                                                ].map(d => (
+                                                    <label key={d.id} className="flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={config.selectedDifficulties.includes(d.id)}
+                                                            onChange={() => toggleDifficulty(d.id)}
+                                                            className="w-5 h-5 text-blue-600 rounded bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 focus:ring-blue-500"
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="font-medium text-gray-900 dark:text-white">{d.id}</div>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">{d.desc}</div>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            <div className="text-right text-xs text-gray-400 mt-4">
+                                                {config.selectedDifficulties.length} levels selected
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                             <div className="flex gap-4">

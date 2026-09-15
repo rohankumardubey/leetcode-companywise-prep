@@ -9,8 +9,23 @@ import ConfirmationModal from './components/ConfirmationModal';
 import { generateSchedule } from './utils/scheduler';
 import { normalizeConfigForProblems } from './utils/config';
 import { getCompaniesForWindow, matchesCompanyAndWindow } from './utils/problemFilters';
+import { enrichProblemsWithSolutions, matchesProblemTrack } from './utils/problemTracks';
 import problemsData from 'virtual:problems-data';
 import solutionsData from 'virtual:solutions-data';
+import videosData from 'virtual:videos-data';
+
+const catalogProblems = enrichProblemsWithSolutions(problemsData, solutionsData.solutions)
+    .map(problem => {
+        const video = videosData.videos[problem.id];
+        return video ? {
+            ...problem,
+            videoUrl: video.videoUrl,
+            videoThumbnail: video.videoThumbnail,
+            videoTitle: video.title,
+            videoChannel: video.channel,
+            videoPlaylistUrl: video.playlistUrl,
+        } : problem;
+    });
 
 function App() {
     // UI State
@@ -26,7 +41,7 @@ function App() {
         const saved = localStorage.getItem('grind_config');
         if (saved) {
             try {
-                return normalizeConfigForProblems(JSON.parse(saved), problemsData);
+                return normalizeConfigForProblems(JSON.parse(saved), catalogProblems);
             } catch (e) {
                 console.error("Failed to parse saved config", e);
             }
@@ -38,14 +53,15 @@ function App() {
             selectedCompanies: [],
             selectedTopics: [],
             experienceLevel: 'Intermediate',
-            questionWindow: 'all'
+            questionWindow: 'all',
+            track: 'algorithms'
         };
     });
 
     const updateConfig = (nextConfig) => {
         setConfig(currentConfig => normalizeConfigForProblems(
             typeof nextConfig === 'function' ? nextConfig(currentConfig) : nextConfig,
-            problemsData
+            catalogProblems
         ));
     };
 
@@ -63,11 +79,12 @@ function App() {
 
     // Calculate live stats for the Configuration Panel
     const filteredStats = useMemo(() => {
-        if (!problemsData) return { 'Very Easy': 0, 'Easy': 0, 'Medium': 0, 'Hard': 0, 'Very Hard': 0 };
+        if (!catalogProblems) return { 'Very Easy': 0, 'Easy': 0, 'Medium': 0, 'Hard': 0, 'Very Hard': 0, Unrated: 0 };
 
-        const stats = { 'Very Easy': 0, 'Easy': 0, 'Medium': 0, 'Hard': 0, 'Very Hard': 0 };
+        const stats = { 'Very Easy': 0, 'Easy': 0, 'Medium': 0, 'Hard': 0, 'Very Hard': 0, Unrated: 0 };
 
-        problemsData.forEach(p => {
+        catalogProblems.forEach(p => {
+            if (!matchesProblemTrack(p, config.track)) return;
             if (!matchesCompanyAndWindow(p, config.selectedCompanies, config.questionWindow)) return;
             if (config.selectedTopics.length > 0) {
                 const pTags = (p.relatedTopics || []).map(t => t.name);
@@ -79,14 +96,15 @@ function App() {
             }
         });
         return stats;
-    }, [config.selectedCompanies, config.selectedTopics, config.questionWindow]);
+    }, [config.selectedCompanies, config.selectedTopics, config.questionWindow, config.track]);
 
     // Dynamic Company Counts
     const dynamicCompanyCounts = useMemo(() => {
-        if (!problemsData) return new Map();
+        if (!catalogProblems) return new Map();
         const map = new Map();
-        problemsData.forEach(p => {
-            if (!config.selectedDifficulties.includes(p.difficulty)) return;
+        catalogProblems.forEach(p => {
+            if (!matchesProblemTrack(p, config.track)) return;
+            if (config.track !== 'sql' && !config.selectedDifficulties.includes(p.difficulty)) return;
             if (config.selectedTopics.length > 0) {
                 const pTags = (p.relatedTopics || []).map(t => t.name);
                 const hasTopic = config.selectedTopics.some(t => pTags.includes(t));
@@ -97,14 +115,15 @@ function App() {
             });
         });
         return map;
-    }, [config.selectedDifficulties, config.selectedTopics, config.questionWindow]);
+    }, [config.selectedDifficulties, config.selectedTopics, config.questionWindow, config.track]);
 
     // Dynamic Topic Counts
     const dynamicTopicCounts = useMemo(() => {
-        if (!problemsData) return new Map();
+        if (!catalogProblems) return new Map();
         const map = new Map();
-        problemsData.forEach(p => {
-            if (!config.selectedDifficulties.includes(p.difficulty)) return;
+        catalogProblems.forEach(p => {
+            if (!matchesProblemTrack(p, config.track)) return;
+            if (config.track !== 'sql' && !config.selectedDifficulties.includes(p.difficulty)) return;
             if (!matchesCompanyAndWindow(p, config.selectedCompanies, config.questionWindow)) return;
             if (p.relatedTopics && Array.isArray(p.relatedTopics)) {
                 p.relatedTopics.forEach(t => {
@@ -114,7 +133,7 @@ function App() {
             }
         });
         return map;
-    }, [config.selectedDifficulties, config.selectedCompanies, config.questionWindow]);
+    }, [config.selectedDifficulties, config.selectedCompanies, config.questionWindow, config.track]);
 
     const [completed, setCompleted] = useState(() => {
         const saved = localStorage.getItem('grind_completed');
@@ -126,8 +145,8 @@ function App() {
     }, [completed]);
 
     const schedule = useMemo(() => {
-        if (!problemsData) return [];
-        return generateSchedule(problemsData, config);
+        if (!catalogProblems) return [];
+        return generateSchedule(catalogProblems, config);
     }, [config]);
 
     const totalProblems = schedule.reduce((acc, week) => acc + week.problems.length, 0);
@@ -166,7 +185,7 @@ function App() {
         setTheme(prev => prev === 'dark' ? 'light' : 'dark');
     };
 
-    if (problemsData.length === 0) {
+    if (catalogProblems.length === 0) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-slate-900 px-4">
                 <div className="max-w-lg rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 p-8 text-center shadow-lg">
@@ -262,7 +281,8 @@ function App() {
                             selectedCompanies: [],
                             selectedTopics: [],
                             experienceLevel: 'Intermediate',
-                            questionWindow: 'all'
+                            questionWindow: 'all',
+                            track: 'algorithms'
                         });
                         setAndPersistViewMode('app');
                     }}
@@ -273,7 +293,7 @@ function App() {
                 <Wizard
                     config={config}
                     setConfig={updateConfig}
-                    allProblems={problemsData}
+                    allProblems={catalogProblems}
                     onComplete={() => setAndPersistViewMode('results')}
                     onCancel={() => setAndPersistViewMode('welcome')}
                 />
@@ -288,7 +308,7 @@ function App() {
                                 <ConfigurationPanel
                                     config={config}
                                     setConfig={updateConfig}
-                                    allProblems={problemsData}
+                                    allProblems={catalogProblems}
                                     filteredStats={filteredStats}
                                     dynamicCompanyCounts={dynamicCompanyCounts}
                                     dynamicTopicCounts={dynamicTopicCounts}

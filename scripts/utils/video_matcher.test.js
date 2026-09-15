@@ -11,6 +11,14 @@ describe('Video Matcher Regex Logic', () => {
         expect(ids.size).toBe(1);
     });
 
+    it('matches an ID after a LeetCode difficulty label', () => {
+        expect(extractProblemIds('LeetCode Medium 176 Amazon Interview SQL Question')).toEqual(new Set(['176']));
+    });
+
+    it('matches an ID after a quoted LeetCode title', () => {
+        expect(extractProblemIds('LeetCode Medium “Friend Requests II” 602 Interview SQL Question')).toEqual(new Set(['602']));
+    });
+
     it('matches single Hash ID', () => {
         const title = "Solving #125 Valid Palindrome";
         const ids = extractProblemIds(title);

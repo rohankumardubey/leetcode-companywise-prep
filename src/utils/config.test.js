@@ -26,6 +26,28 @@ describe('normalizeConfigForProblems', () => {
         expect(config.selectedTopics).toEqual(['Array']);
         expect(config.selectedDifficulties).toEqual(['Easy']);
         expect(config.questionWindow).toBe('all');
+        expect(config.track).toBe('algorithms');
+    });
+
+    it('normalizes filters within the selected question track', () => {
+        const config = normalizeConfigForProblems({
+            track: 'sql',
+            selectedCompanies: [],
+            selectedTopics: ['Array', 'Database'],
+            selectedDifficulties: ['Easy', 'Hard'],
+        }, [
+            ...problems.map(problem => ({ ...problem, track: 'algorithms' })),
+            {
+                track: 'sql',
+                difficulty: 'Easy',
+                companies: [],
+                relatedTopics: [{ name: 'Database' }],
+            },
+        ]);
+
+        expect(config.track).toBe('sql');
+        expect(config.selectedTopics).toEqual(['Database']);
+        expect(config.selectedDifficulties).toEqual(['Easy']);
     });
 
     it('restores all available difficulties when none of the saved values exist', () => {

@@ -1,11 +1,14 @@
 import { QUESTION_WINDOW_IDS } from '../constants/questionWindows';
+import { matchesProblemTrack, normalizeProblemTrack } from './problemTracks';
 
 export function normalizeConfigForProblems(config, problems) {
-    const availableCompanies = new Set(problems.flatMap(problem => problem.companies || []));
+    const track = normalizeProblemTrack(config.track);
+    const trackProblems = problems.filter(problem => matchesProblemTrack(problem, track));
+    const availableCompanies = new Set(trackProblems.flatMap(problem => problem.companies || []));
     const availableTopics = new Set(
-        problems.flatMap(problem => (problem.relatedTopics || []).map(topic => topic.name || topic))
+        trackProblems.flatMap(problem => (problem.relatedTopics || []).map(topic => topic.name || topic))
     );
-    const availableDifficulties = new Set(problems.map(problem => problem.difficulty));
+    const availableDifficulties = new Set(trackProblems.map(problem => problem.difficulty));
     const selectedDifficulties = (config.selectedDifficulties || [])
         .filter(difficulty => availableDifficulties.has(difficulty));
 
@@ -21,5 +24,6 @@ export function normalizeConfigForProblems(config, problems) {
         questionWindow: QUESTION_WINDOW_IDS.has(config.questionWindow)
             ? config.questionWindow
             : 'all',
+        track,
     };
 }

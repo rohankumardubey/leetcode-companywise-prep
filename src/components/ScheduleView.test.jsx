@@ -23,6 +23,9 @@ const mockSchedule = [
                 url: 'https://leetcode.com/problems/two-sum',
                 likes: 50000,
                 company_count: 100,
+                track: 'algorithms',
+                relatedTopics: [{ name: 'Array' }],
+                solutionLanguages: ['java', 'python', 'cpp'],
                 // Case 1: Video present
                 videoUrl: 'https://www.youtube.com/watch?v=7jDS9KQEDbI',
                 videoThumbnail: 'https://i.ytimg.com/vi/7jDS9KQEDbI/default.jpg'
@@ -50,26 +53,18 @@ describe('ScheduleView Component', () => {
         expect(screen.getByText('Week 1')).toBeInTheDocument();
     });
 
-    it('renders video thumbnail when videoUrl is present', () => {
+    it('renders a compact video explanation link when videoUrl is present', () => {
         render(<ScheduleView schedule={mockSchedule} completed={new Set()} setCompleted={() => { }} />);
 
-        // Find the link with the correct href
-        const videoLink = screen.getByTitle('Watch Solution: Two Sum');
+        const videoLink = screen.getByRole('link', { name: 'Watch video explanation for Two Sum' });
         expect(videoLink).toBeInTheDocument();
         expect(videoLink).toHaveAttribute('href', 'https://www.youtube.com/watch?v=7jDS9KQEDbI');
-
-        // Verify thumbnail image is inside
-        const img = screen.getByAltText('Solution');
-        expect(img).toBeInTheDocument();
-        expect(img).toHaveAttribute('src', 'https://i.ytimg.com/vi/7jDS9KQEDbI/default.jpg');
     });
 
-    it('does NOT render video thumbnail when videoUrl is missing', () => {
+    it('does not render a video action when videoUrl is missing', () => {
         render(<ScheduleView schedule={mockSchedule} completed={new Set()} setCompleted={() => { }} />);
 
-        // Add Two Numbers should NOT have a video link
-        // We can query by title attribute for that specific problem
-        const missingLink = screen.queryByTitle('Watch Solution: Add Two Numbers');
+        const missingLink = screen.queryByRole('link', { name: 'Watch video explanation for Add Two Numbers' });
         expect(missingLink).toBeNull();
     });
 
@@ -103,5 +98,14 @@ describe('ScheduleView Component', () => {
         expect(screen.getAllByRole('button', { name: 'Solutions' })).toHaveLength(1);
         fireEvent.click(screen.getByRole('button', { name: 'Solutions' }));
         expect(screen.getByRole('dialog', { name: '1. Two Sum' })).toBeInTheDocument();
+    });
+
+    it('renders problem, track, topic, and solution-language tags', () => {
+        render(<ScheduleView schedule={mockSchedule} completed={new Set()} setCompleted={() => {}} />);
+
+        expect(screen.getByText('#1')).toBeInTheDocument();
+        expect(screen.getAllByText('Algorithms')).not.toHaveLength(0);
+        expect(screen.getAllByText('Array')).not.toHaveLength(0);
+        expect(screen.getByText('C++')).toBeInTheDocument();
     });
 });

@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import QuestionWindowSelector from './QuestionWindowSelector';
+import ProblemTrackSelector from './ProblemTrackSelector';
 import { getCompaniesForWindow } from '../utils/problemFilters';
+import { matchesProblemTrack } from '../utils/problemTracks';
 
 export default function ConfigurationPanel({ config, setConfig, allProblems, filteredStats, dynamicCompanyCounts, dynamicTopicCounts }) {
     const [companySearch, setCompanySearch] = useState('');
     const [topicSearch, setTopicSearch] = useState('');
-    const hasCompanyData = allProblems.some(problem => (problem.companies || []).length > 0);
-    const hasTopicData = allProblems.some(problem => (problem.relatedTopics || []).length > 0);
+    const trackProblems = allProblems.filter(problem => matchesProblemTrack(problem, config.track));
+    const hasCompanyData = trackProblems.some(problem => (problem.companies || []).length > 0);
+    const hasTopicData = trackProblems.some(problem => (problem.relatedTopics || []).length > 0);
     const [activeTab, setActiveTab] = useState(hasCompanyData ? 'companies' : 'topics');
 
     // Extract unique companies & counts using dynamic data
@@ -17,7 +20,7 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
 
         const map = new Map();
         // Initialize with 0 for all known companies
-        allProblems.forEach(p => {
+        trackProblems.forEach(p => {
             getCompaniesForWindow(p, config.questionWindow).forEach(c => map.set(c, 0));
         });
 
@@ -37,13 +40,13 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
                 return b[1] - a[1];
             })
             .map(([name, count]) => ({ name, count }));
-    }, [allProblems, dynamicCompanyCounts, config.selectedCompanies, config.questionWindow]);
+    }, [trackProblems, dynamicCompanyCounts, config.selectedCompanies, config.questionWindow]);
 
     // Extract unique topics & counts using dynamic data
     const topicOptions = useMemo(() => {
         const map = new Map();
         // Initialize with 0
-        allProblems.forEach(p => {
+        trackProblems.forEach(p => {
             if (p.relatedTopics && Array.isArray(p.relatedTopics)) {
                 p.relatedTopics.forEach(t => {
                     const name = t.name || t;
@@ -68,7 +71,7 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
                 return b[1] - a[1];
             })
             .map(([name, count]) => ({ name, count }));
-    }, [allProblems, dynamicTopicCounts, config.selectedTopics]);
+    }, [trackProblems, dynamicTopicCounts, config.selectedTopics]);
 
     const filteredCompanies = companyOptions.filter(c =>
         c.name.toLowerCase().includes(companySearch.toLowerCase())
@@ -107,11 +110,22 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
     };
 
     return (
-        <div className="sticky top-16 -mt-8 pt-8 h-[calc(100vh-6rem)] z-[900]">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-8 flex flex-col h-full transition-colors duration-300">
+        <div className="z-[900] lg:sticky lg:top-16 lg:-mt-8 lg:h-[calc(100vh-6rem)] lg:pt-8">
+            <div className="custom-scrollbar flex max-h-[calc(100vh-6rem)] flex-col space-y-6 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-colors duration-300 dark:border-gray-700 dark:bg-slate-800 lg:h-full">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-4 shrink-0 tracking-tight">
                     Configuration
                 </h2>
+
+                <ProblemTrackSelector
+                    value={config.track}
+                    problems={allProblems}
+                    onChange={track => setConfig({
+                        ...config,
+                        track,
+                        selectedCompanies: [],
+                        selectedTopics: [],
+                    })}
+                />
 
                 {/* Experience Level */}
                 <div>
@@ -179,57 +193,70 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
 
                 {/* Difficulty */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Difficulty</label>
-                    <div className="flex gap-2 flex-wrap mb-3">
-                        {['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'].map(d => (
-                            <button
-                                key={d}
-                                onClick={() => toggleDifficulty(d)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${config.selectedDifficulties.includes(d)
-                                    ? d === 'Very Easy' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                                        : d === 'Easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
-                                            : d === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
-                                                : d === 'Hard' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-                                                    : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'
-                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                    }`}
-                            >
-                                {d}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Available Problems Summary Widget */}
-                    {filteredStats && (
+                    {config.track === 'sql' ? (
                         <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 text-xs border border-gray-100 dark:border-gray-700">
-                            <div className="flex justify-between items-center mb-2">
-                                <div className="font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px]">Selected Pool</div>
-                                <div className="font-bold text-gray-900 dark:text-white">
-                                    {Object.entries(filteredStats)
-                                        .filter(([diff]) => config.selectedDifficulties.includes(diff))
-                                        .reduce((acc, [, count]) => acc + count, 0)} Total
-                                </div>
+                            <div className="font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px]">SQL Question Pool</div>
+                            <div className="mt-1 font-bold text-gray-900 dark:text-white">
+                                {Object.values(filteredStats || {}).reduce((total, count) => total + count, 0)} questions match these filters
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-2">
-                                {['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard']
-                                    .filter(d => config.selectedDifficulties.includes(d))
-                                    .map(lvl => (
-                                        <div key={lvl} className="flex items-center gap-1.5">
-                                            <div className={`w-2 h-2 rounded-full ${lvl === 'Very Easy' ? 'bg-emerald-500' :
-                                                lvl === 'Easy' ? 'bg-green-500' :
-                                                    lvl === 'Medium' ? 'bg-yellow-500' :
-                                                        lvl === 'Hard' ? 'bg-red-500' : 'bg-purple-500'
-                                                }`}></div>
-                                            <span className="text-gray-700 dark:text-gray-300 font-medium">{lvl}: {filteredStats[lvl] || 0}</span>
-                                        </div>
-                                    ))}
-                            </div>
+                            <p className="mt-1 text-gray-500 dark:text-gray-400">
+                                Difficulty filtering is disabled for SQL because the upstream solution source does not provide difficulty metadata for every question.
+                            </p>
                         </div>
+                    ) : (
+                        <>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Difficulty</label>
+                            <div className="flex gap-2 flex-wrap mb-3">
+                                {['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'].map(d => (
+                                    <button
+                                        key={d}
+                                        onClick={() => toggleDifficulty(d)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${config.selectedDifficulties.includes(d)
+                                            ? d === 'Very Easy' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                                                : d === 'Easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+                                                    : d === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
+                                                        : d === 'Hard' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-800'
+                                                            : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-800'
+                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            }`}
+                                    >
+                                        {d}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {filteredStats && (
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 text-xs border border-gray-100 dark:border-gray-700">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px]">Selected Pool</div>
+                                        <div className="font-bold text-gray-900 dark:text-white">
+                                            {Object.entries(filteredStats)
+                                                .filter(([diff]) => config.selectedDifficulties.includes(diff))
+                                                .reduce((acc, [, count]) => acc + count, 0)} Total
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                        {['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard']
+                                            .filter(d => config.selectedDifficulties.includes(d))
+                                            .map(lvl => (
+                                                <div key={lvl} className="flex items-center gap-1.5">
+                                                    <div className={`w-2 h-2 rounded-full ${lvl === 'Very Easy' ? 'bg-emerald-500' :
+                                                        lvl === 'Easy' ? 'bg-green-500' :
+                                                            lvl === 'Medium' ? 'bg-yellow-500' :
+                                                                lvl === 'Hard' ? 'bg-red-500' : 'bg-purple-500'
+                                                        }`}></div>
+                                                    <span className="text-gray-700 dark:text-gray-300 font-medium">{lvl}: {filteredStats[lvl] || 0}</span>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
                 {/* Tabs for Companies / Topics */}
-                <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex shrink-0 flex-col">
                     <div className="flex border-b border-gray-100 dark:border-gray-700 mb-3">
                         <button
                             onClick={() => setActiveTab('companies')}
@@ -267,7 +294,7 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
                                     </button>
                                 )}
                             </div>
-                            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 overflow-y-auto p-2 custom-scrollbar">
+                            <div className="custom-scrollbar h-64 shrink-0 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-900">
                                 {filteredCompanies.length === 0 && <div className="text-gray-400 text-xs text-center p-4">No matches found</div>}
                                 {filteredCompanies.map(({ name, count }) => (
                                     <label key={name} className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer group transition-colors">
@@ -305,7 +332,7 @@ export default function ConfigurationPanel({ config, setConfig, allProblems, fil
                                     </button>
                                 )}
                             </div>
-                            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 overflow-y-auto p-2 custom-scrollbar">
+                            <div className="custom-scrollbar h-64 shrink-0 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-900">
                                 {filteredTopics.length === 0 && <div className="text-gray-400 text-xs text-center p-4">No matches found</div>}
                                 {filteredTopics.map(({ name, count }) => (
                                     <label key={name} className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer group transition-colors">

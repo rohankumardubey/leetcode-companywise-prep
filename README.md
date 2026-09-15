@@ -14,6 +14,8 @@ Stop randomly solving problems. This tool generates a **tailored interview prepa
 *   **Progress Tracking**: Mark problems as "Done" and watch your completion percentage rise.
 *   **Current Company Data**: Refreshes company-wise questions from the configured GitHub source.
 *   **Local Solution Viewer**: Opens Java, Python, C++, and SQL solutions sourced from [`walkccc/LeetCode`](https://github.com/walkccc/LeetCode).
+*   **Separate Practice Tracks**: Keeps LeetCode algorithm preparation and SQL/database preparation in distinct schedules with visible track, topic, problem-ID, and solution-language tags.
+*   **Video Explanations**: Shows a compact YouTube action when an exact problem-ID match is available from a configured playlist.
 
 ## 🚀 How to Use
 
@@ -48,6 +50,13 @@ only when its source commit or importer changes. If GitHub is temporarily
 unavailable, an existing cached checkout/catalog is used. A clean source build
 still succeeds without `.cache`; company questions show an unavailable screen,
 and solution actions remain hidden.
+
+The setup also refreshes an ignored video catalog from the
+[NeetCode Blind 75](https://www.youtube.com/playlist?list=PLot-Xpze53ldVwtstag2TL4HQhAnC8ATf)
+and [Everyday Data Science Leetcode SQL Complete](https://www.youtube.com/playlist?list=PLtfxzVLWb-B_dsIXFniI6PokR4anSP5rp)
+playlists. Videos are matched only when their titles contain an exact LeetCode
+problem ID. If YouTube is unavailable, the previous local video catalog is
+retained.
 
 To run each step manually:
 

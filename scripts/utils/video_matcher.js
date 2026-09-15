@@ -24,10 +24,19 @@ export function extractProblemIds(title) {
         numbers.forEach(n => matchedIds.add(n));
     }
 
-    // Strategy 1: "LeetCode <ID>" or "LeetCode #<ID>"
-    // Matches: "LeetCode 125", "LeetCode #9"
-    const explicitMatches = [...title.matchAll(/LeetCode\s*#?(\d+)/gi)];
+    // Strategy 1: "LeetCode <ID>", "LeetCode #<ID>", or "LeetCode Medium <ID>"
+    const explicitMatches = [
+        ...title.matchAll(/LeetCode(?:\s+(?:Easy|Medium|Hard))?\s*#?(\d+)/gi),
+    ];
     explicitMatches.forEach(m => matchedIds.add(m[1]));
+
+    // Strategy 1b: Some channels put the title between "LeetCode" and the ID.
+    // Example: LeetCode Medium "Friend Requests II" 602 Interview SQL Question
+    if (explicitMatches.length === 0 && /LeetCode/i.test(title)) {
+        const leetCodeSuffix = title.slice(title.search(/LeetCode/i) + 'LeetCode'.length);
+        const firstNumber = leetCodeSuffix.match(/\b(\d{1,4})\b/);
+        if (firstNumber) matchedIds.add(firstNumber[1]);
+    }
 
     // Strategy 2: "#<ID>"
     // Matches: "#125", "#9"

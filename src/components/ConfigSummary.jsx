@@ -12,6 +12,13 @@ export default function ConfigSummary({ config }) {
 
             <div className="space-y-6">
                 <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Question Track</label>
+                    <div className="text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700/50 px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                        {config.track === 'sql' ? 'SQL' : 'LeetCode Algorithms'}
+                    </div>
+                </div>
+
+                <div>
                     <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 block">Experience Level</label>
                     <div className="text-base font-medium text-gray-900 dark:text-white capitalize bg-gray-50 dark:bg-slate-700/50 px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
                         {config.experienceLevel}

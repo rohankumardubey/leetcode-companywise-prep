@@ -7,6 +7,7 @@ const mockProblems = [
     { title: "3Sum", difficulty: "Medium", companies: ["Meta"], companyData: { Meta: { all: 75, threeMonths: 70 } }, relatedTopics: [{ name: "Array" }], duration: 30, company_count: 30 },
     { title: "Hard Graph", difficulty: "Hard", companies: ["Google"], companyData: { Google: { all: 50, sixMonths: 50 } }, relatedTopics: [{ name: "Graph" }], duration: 45, company_count: 10 },
     { title: "Easy String", difficulty: "Easy", companies: ["Microsoft"], companyData: { Microsoft: { all: 60 } }, relatedTopics: [{ name: "String" }], duration: 15, company_count: 20 },
+    { title: "Combine Two Tables", track: "sql", difficulty: "Easy", companies: ["Amazon"], companyData: { Amazon: { all: 40 } }, relatedTopics: [{ name: "Database" }], duration: 20, company_count: 5 },
 ];
 
 describe('Scheduler Logic', () => {
@@ -91,5 +92,28 @@ describe('Scheduler Logic', () => {
         });
 
         expect(schedule.flatMap(week => week.problems).map(problem => problem.title)).toEqual(["Two Sum"]);
+    });
+
+    it('keeps algorithm and SQL tracks separate', () => {
+        const baseConfig = {
+            weeks: 1,
+            hoursPerWeek: 5,
+            selectedDifficulties: ["Easy", "Medium", "Hard"],
+            selectedCompanies: [],
+            selectedTopics: [],
+            experienceLevel: "Intermediate",
+        };
+
+        const algorithmTitles = generateSchedule(mockProblems, {
+            ...baseConfig,
+            track: 'algorithms',
+        }).flatMap(week => week.problems).map(problem => problem.title);
+        const sqlTitles = generateSchedule(mockProblems, {
+            ...baseConfig,
+            track: 'sql',
+        }).flatMap(week => week.problems).map(problem => problem.title);
+
+        expect(algorithmTitles).not.toContain('Combine Two Tables');
+        expect(sqlTitles).toEqual(['Combine Two Tables']);
     });
 });

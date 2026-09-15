@@ -1,6 +1,8 @@
 
 // "Smart Grinder" Algorithm
 // Generates a weekly schedule based on constraints and intelligent weighting.
+import { matchesProblemTrack } from './problemTracks';
+import { getCompanySignal, matchesCompanyAndWindow } from './problemFilters';
 
 function getDifficultyWeight(diff) {
     switch (diff) {
@@ -26,6 +28,7 @@ export function generateSchedule(allProblems, config) {
         selectedTopics,
         experienceLevel,
         questionWindow = 'all',
+        track = 'algorithms',
     } = config;
     const totalHoursV = weeks * hoursPerWeek * 60; // Total budget in minutes
 
@@ -36,8 +39,10 @@ export function generateSchedule(allProblems, config) {
 
     // 1. FILTERING
     let pool = allProblems.filter(p => {
+        if (!matchesProblemTrack(p, track)) return false;
+
         // Difficulty Check
-        if (!selectedDifficulties.includes(p.difficulty)) return false;
+        if (track !== 'sql' && !selectedDifficulties.includes(p.difficulty)) return false;
 
         if (!matchesCompanyAndWindow(p, selectedCompanies, questionWindow)) return false;
 
@@ -212,4 +217,3 @@ export function generateSchedule(allProblems, config) {
 
     return schedule;
 }
-import { getCompanySignal, matchesCompanyAndWindow } from './problemFilters';

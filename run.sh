@@ -24,6 +24,7 @@ GENERATED_DATA_FILE="$ROOT_DIR/.cache/companyProblems.json"
 SOLUTION_SOURCE_DIR="$ROOT_DIR/.cache/walkccc-leetcode"
 SOLUTION_DATA_REVISION_FILE="$ROOT_DIR/.cache/solution-data-revision"
 GENERATED_SOLUTION_FILE="$ROOT_DIR/.cache/solutions.json"
+GENERATED_VIDEO_FILE="$ROOT_DIR/.cache/videos.json"
 
 rm -f "$ROOT_DIR/.cache/localProblems.json"
 
@@ -105,9 +106,18 @@ if [[ -d "$SOLUTION_SOURCE_DIR/.git" ]]; then
     fi
 fi
 
+echo "Refreshing YouTube explanation links..."
+if ! node scripts/fetch_youtube_videos.js "$GENERATED_VIDEO_FILE"; then
+    if [[ -f "$GENERATED_VIDEO_FILE" ]]; then
+        echo "Warning: Could not refresh YouTube playlists; using the cached video catalog."
+    else
+        echo "Warning: Could not refresh YouTube playlists; video explanations will be unavailable."
+    fi
+fi
+
 echo
 if [[ "${SETUP_ONLY:-0}" == "1" ]]; then
-    echo "Local question and solution catalogs are ready."
+    echo "Local question, solution, and video catalogs are ready."
     exit 0
 fi
 
